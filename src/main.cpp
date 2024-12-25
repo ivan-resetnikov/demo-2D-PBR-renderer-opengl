@@ -49,7 +49,7 @@ inline void Engine::initContext()
     g_context.window = SDL_CreateWindow(
         "Engine", 
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-        g_context.screen_size_x, g_context.screen_size_y,
+        (int)g_context.screen_size_x, (int)g_context.screen_size_y,
         SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS);
     if (!g_context.window) {
         log_critical("Failed to create SDL window\n SDL Error: " + (std::string)SDL_GetError());
@@ -87,6 +87,7 @@ inline void Engine::initContext()
 
 inline void Engine::mainLoop()
 {
+    // Mesh
     GLsizei vertex_size = (2 + 2) * sizeof(float);
     float vertices[] = {
         1.0f, 0.0f,  1.0f, 0.0f,  // top right
@@ -116,10 +117,12 @@ inline void Engine::mainLoop()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vertex_size, (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // Shader
     GLuint shader_program = create_generic_shader(
         Engine::read_text_file("../resources/shaders/generic.vs").c_str(),
         Engine::read_text_file("../resources/shaders/generic.fs").c_str());
 
+    // Texture
     Engine::TextureInfo texture_info;
     GLuint texture = Engine::load_texture("../assets/textures/brick_00/diffuse.jpg", GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_RGB, GL_RGB, texture_info);
 
@@ -140,8 +143,10 @@ inline void Engine::mainLoop()
 
         glm::mat4 view_matrix(1.0f);
 
+        // Quad
         glUseProgram(shader_program);
 
+        // Uniforms: Matrices
         glm::mat4 model_matrix(1.0f);
         model_matrix = glm::translate(model_matrix, glm::vec3(256.0f, 256.0f, 0.0f));
         model_matrix = glm::scale(model_matrix, glm::vec3((float)texture_info.width, (float)texture_info.height, 0.0f));
@@ -149,9 +154,29 @@ inline void Engine::mainLoop()
         glUniformMatrix4fv(glGetUniformLocation(shader_program, "u_view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
         glUniformMatrix4fv(glGetUniformLocation(shader_program, "u_projection_matrix"), 1, GL_FALSE, &projection_matrix[0][0]);
 
+        // Uniforms: Textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
 
+        // Uniforms: Point lights
+        glUniform3fv(glGetUniformLocation(shader_program, "u_ambient_light"), 1, &glm::vec3(0.059f, 0.055f, 0.09f)[0]);
+
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[0].height"), 0.0f);
+        glUniform2fv(glGetUniformLocation(shader_program, "u_point_lights[0].position"), 1, &glm::vec2(512.0f, 512.0f)[0]);
+        glUniform3fv(glGetUniformLocation(shader_program, "u_point_lights[0].color"), 1, &glm::vec3(1.0f, 0.0f, 0.0f)[0]);
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[0].radius"), 256.0f);
+
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[1].height"), 0.0f);
+        glUniform2fv(glGetUniformLocation(shader_program, "u_point_lights[1].position"), 1, &glm::vec2(512.0f + 256.0f, 512.0f - 256.0f)[0]);
+        glUniform3fv(glGetUniformLocation(shader_program, "u_point_lights[1].color"), 1, &glm::vec3(0.0f, 1.0f, 0.0f)[0]);
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[1].radius"), 256.0f);
+
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[2].height"), 0.0f);
+        glUniform2fv(glGetUniformLocation(shader_program, "u_point_lights[2].position"), 1, &glm::vec2(512.0f + 256.0f, 512.0f + 256.0f)[0]);
+        glUniform3fv(glGetUniformLocation(shader_program, "u_point_lights[2].color"), 1, &glm::vec3(0.0f, 0.0f, 1.0f)[0]);
+        glUniform1f(glGetUniformLocation(shader_program, "u_point_lights[2].radius"), 256.0f);
+
+        // Draw
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
