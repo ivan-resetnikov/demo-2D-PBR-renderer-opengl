@@ -60,7 +60,7 @@ vec3 process_point_light(PointLight point_light, vec2 frag_normal, float ao_valu
     float normal_difference = max(dot(normal, light_dir), 0.0);
 
     // Light mask
-    // vec2 mask_UV = (v_frag_pos - point_light.position + point_light.radius) / point_light.radius;
+    // vec2 mask_UV = (v_frag_pos - point_light.position + 512.0) / 512.0 * 0.5;
     // if (mask_UV.x < 0.0 || mask_UV.x > 1.0 || mask_UV.y < 0.0 || mask_UV.y > 1.0) return vec3(0.0);
     // vec3 mask_value = texture(u_light_mask, mask_UV).rgb;
     vec3 mask_value = vec3(1.0);
@@ -71,4 +71,6 @@ vec3 process_point_light(PointLight point_light, vec2 frag_normal, float ao_valu
     vec3 specular_value = specular_factor * point_light.color;
 
     return (point_light.color + specular_value) * point_light.energy * ao_value * normal_difference * mask_value * attenuation;
+
+    // return vec3(mask_UV, 0.0);
 }

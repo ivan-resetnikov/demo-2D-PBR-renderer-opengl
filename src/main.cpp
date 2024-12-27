@@ -221,6 +221,16 @@ inline void Engine::mainLoop()
 
         for (int i = 0; i < 16; i++)
         {
+            point_lights[i].energy = (
+                (sin(((float)SDL_GetTicks() + (float)i * 120.0f) * 0.004f) + 2.0) * 0.2f +
+                (sin(((float)SDL_GetTicks() + (float)i * 300.0f) * 0.005f) + 2.0) * 0.3f +
+                (sin(((float)SDL_GetTicks() + (float)i * 60.0f) * 0.007f) + 2.0) * 0.5f +
+                (sin(((float)SDL_GetTicks() + (float)i * 400.0f) * 0.0045f) + 2.0) * 0.2f
+            );
+        }
+
+        for (int i = 0; i < 16; i++)
+        {
             point_lights[16 + i].energy = (
                 (sin(((float)SDL_GetTicks() + (float)i * 120.0f) * 0.002f) + 1.25) * 0.1f +
                 (sin(((float)SDL_GetTicks() + (float)i * 300.0f) * 0.0025f) + 1.25) * 0.05f +
@@ -263,7 +273,8 @@ inline void Engine::mainLoop()
         glUniform1i(glGetUniformLocation(shader_program, "u_light_mask"), 4);
 
         // Uniforms: Light: Ambient
-        glUniform3fv(glGetUniformLocation(shader_program, "u_ambient_light"), 1, &glm::vec3(0.059f, 0.055f, 0.09f)[0]);
+        // glUniform3fv(glGetUniformLocation(shader_program, "u_ambient_light"), 1, &glm::vec3(0.059f, 0.055f, 0.09f)[0]);
+        glUniform3fv(glGetUniformLocation(shader_program, "u_ambient_light"), 1, &glm::vec3(0.0f)[0]);
 
         // Uniforms: Light: Point lights
         int i = 0;
